@@ -26,7 +26,8 @@ enum State {
     showTemperature,
     showPressure,
     showAltitude,
-    showAlcohol
+    showAlcohol,
+    showBAC
 };
 State state = showTemperature;
 
@@ -34,11 +35,15 @@ void printTemperature();
 void printPressure();
 void printAltitude();
 void printAlcohol();
+void printBAC(); // blood alcohol content
+
+float mapFloat(float x, float in_min, float in_max, float out_min, float out_max);
 
 TimedAction refreshTemperature = TimedAction(3000, printTemperature);
 TimedAction refreshPressure = TimedAction(3000, printPressure);
 TimedAction refreshAltitude = TimedAction(3000, printAltitude);
 TimedAction refreshAlcohol = TimedAction(3000, printAlcohol);
+TimedAction refreshBAC = TimedAction(3000, printBAC);
 
 void setup() {
     lcd.begin(16, 2);
@@ -57,6 +62,8 @@ void setup() {
     refreshTemperature.disable();
     refreshPressure.disable();
     refreshAltitude.disable();
+    refreshAlcohol.disable();
+    refreshBAC.disable();
     lcd.print("Ready.");
     lcd.setCursor(0, 1);
     lcd.print("Touch the sensor");
@@ -73,7 +80,7 @@ void loop() {
             case showTemperature:
                 printTemperature();
                 state = showPressure;
-                refreshAlcohol.disable();
+                refreshBAC.disable();
                 refreshTemperature.enable();
                 break;
             case showPressure:
@@ -90,9 +97,15 @@ void loop() {
                 break;
             case showAlcohol:
                 printAlcohol();
-                state = showTemperature;
+                state = showBAC;
                 refreshAltitude.disable();
                 refreshAlcohol.enable();
+                break;
+            case showBAC:
+                printBAC();
+                state = showTemperature;
+                refreshAlcohol.disable();
+                refreshBAC.enable();
                 break;
             default: // control should not reach the default branch
                 lcd.clear();
@@ -104,6 +117,7 @@ void loop() {
     refreshPressure.check();
     refreshAltitude.check();
     refreshAlcohol.check();
+    refreshBAC.check();
 }
 
 void printTemperature() {
@@ -139,4 +153,32 @@ void printAlcohol() {
     // lcd.setCursor(16 - strlen(data), 1);
     lcd.setCursor(12, 1);
     lcd.print(value);
+}
+
+void printBAC() {
+    /**
+     * @brief Calculates and prints the approximate blood alcohol content
+     * The conversion is not accurate, it's reliability heavily depends on
+     * the environment, such as temperature and humidity. Therefore this
+     * calculation can't be trusted to accurately determine one's BAC.
+     * DO NOT use this sensor or calculation to determine one's ability to drive.
+     */
+    int value = analogRead(alcsensorAnalogPin);
+    if (value < 200)
+        sprintf(data, "0.00%%\0");
+    else if (value > 1023)
+        sprintf(data, "max value: >0.2\0");
+    else {
+        // float bac = mapFloat(value, 750, 1023, 0.01, 0.08);
+        float bac = mapFloat(value, (float) 200, (float) 1023, (float) 0.01, (float) 0.2);
+        sprintf(data, "%u.%02u%%\0", (unsigned int) bac, (unsigned int) (bac * 100) % 100);
+    }
+    lcd.clear();
+    lcd.print("Approx. BAC:");
+    lcd.setCursor(16 - strlen(data), 1);
+    lcd.print(data);
+}
+
+float mapFloat(float x, float in_min, float in_max, float out_min, float out_max) {
+    return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
