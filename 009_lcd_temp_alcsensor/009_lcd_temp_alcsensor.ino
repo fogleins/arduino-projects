@@ -39,6 +39,7 @@ void printBAC(); // blood alcohol content
 
 float mapFloat(float x, float in_min, float in_max, float out_min, float out_max);
 
+// TimedAction objects are used to refresh the value printed on the LCD screen
 TimedAction refreshTemperature = TimedAction(3000, printTemperature);
 TimedAction refreshPressure = TimedAction(3000, printPressure);
 TimedAction refreshAltitude = TimedAction(3000, printAltitude);
@@ -113,6 +114,7 @@ void loop() {
                 break;
         }
     }
+    // Checking whether the values need to be refreshed
     refreshTemperature.check();
     refreshPressure.check();
     refreshAltitude.check();
@@ -121,6 +123,9 @@ void loop() {
 }
 
 void printTemperature() {
+    /**
+     * @brief Prints the temperature onto the LCD screen
+     */
     float temperature = bmp280.readTemperature();
     sprintf(data, "%d.%02u %cC\0", (unsigned int) temperature, (unsigned int) (temperature * 100) % 100, 223);
     lcd.clear();
@@ -130,6 +135,9 @@ void printTemperature() {
 }
 
 void printPressure() {
+    /**
+     * @brief Prints the pressure onto the LCD screen.
+     */
     float pressure = bmp280.readPressure();
     sprintf(data, "%u.%02u hPa\0", (int) (pressure / 100), (int) ((uint32_t) pressure % 100));
     lcd.clear();
@@ -139,6 +147,11 @@ void printPressure() {
 }
 
 void printAltitude() {
+    /**
+     * @brief Calculates the altitude based on pressure.
+     * You might need to change the readAltitude function's parameter
+     * based on your geographic location.
+     */
     sprintf(data, "%d m\0", (int) bmp280.readAltitude(/* 1013.25 */));
     lcd.clear();
     lcd.print("Altitude:");
@@ -147,6 +160,10 @@ void printAltitude() {
 }
 
 void printAlcohol() {
+    /**
+     * @brief Reads the voltage from an analog input pin and prints
+     * the value onto the LCD screen.
+     */
     int value = analogRead(alcsensorAnalogPin);
     lcd.clear();
     lcd.print("Alcohol level:");
@@ -180,5 +197,15 @@ void printBAC() {
 }
 
 float mapFloat(float x, float in_min, float in_max, float out_min, float out_max) {
+    /**
+     * @brief The Arduino library's map function implemented to work with floats
+     * See the Arduino reference here: https://www.arduino.cc/reference/en/language/functions/math/map/
+     * @param x: the number to map
+     * @param in_min: the lower bound of the value’s current range
+     * @param in_max: the upper bound of the value’s current range
+     * @param out_min: the lower bound of the value’s target range
+     * @param out_max: the upper bound of the value’s target range
+     * @returns The mapped value
+     */
     return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
