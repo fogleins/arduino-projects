@@ -12,6 +12,12 @@
 <script src="chart.js"></script>
 <link rel="stylesheet" href="style.css">
 <body>
+<label for="time-interval">Show graph for:</label>
+<select name="time-interval" id="time-interval">
+    <option value="24-hours">Last 24 hours</option>
+    <option value="7-days">Last week</option>
+    <option value="last-month">Last month</option>
+</select>
 <!-- div for the graph -->
 <div id="chart" class="chart-container"></div>
 </body>

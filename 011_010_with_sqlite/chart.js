@@ -1,10 +1,12 @@
- function loadData() {
+function loadData(interval = "24-hours") {
     $.ajax({
         method: "GET",
         url: "chart_data.php",
         timeout: 3000,
         dataType: "json",
-        data: {},
+        data: {
+            interval: interval
+        },
         success: function(response) {
             if (response.success) {
                 timestamps = [];
@@ -22,6 +24,11 @@
             }
         }
     });
- }
+}
 
- $(() => loadData());
+$(() => {
+    loadData();
+    $("#time-interval").on("change", function () {
+        loadData($("option:selected", this)[0].value);
+    });
+});
